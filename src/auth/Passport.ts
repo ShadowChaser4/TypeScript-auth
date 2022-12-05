@@ -1,6 +1,6 @@
 import passport from "passport";
 import passportLocal from 'passport-local'
-import {Express} from 'express';
+import { Request,Response } from "express";
 
 const LocalStrategy = passportLocal.Strategy
 
@@ -16,7 +16,7 @@ passport.use(
 
         if (user.username == username && user.password == password_entered)
         {
-          return cb(null, {"username": username, "hakuna":"matata"})
+          return cb(null, {"username": username})
         }
         return  cb(null, false)
 
@@ -41,5 +41,7 @@ passport.deserializeUser(
 )
 
 
-export{}
+
+
+
 export{passport}

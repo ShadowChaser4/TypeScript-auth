@@ -1,10 +1,10 @@
 import {Router, Request, Response} from 'express'
-import {passport} from '../auth/authschema'
+import {passport} from '../../auth/Passport'
 
 const router:Router = Router()
 
 
-router.post('', passport.authenticate('local'), (req: Request, res:Response)=>{
+router.post('', passport.authenticate('local'), (req: Request, res:Response):void=>{
    res.json({"done":req.user})
 })
 

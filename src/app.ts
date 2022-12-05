@@ -1,7 +1,7 @@
 import express from 'express';
 import bodyparser from 'body-parser'
-import {passport} from './auth/authschema'
-import router from './routes/routes';
+import {passport} from './auth/Passport'
+import router from './routes/router';
 const app  = express();
 const session = require("express-session")
 
@@ -13,13 +13,13 @@ app.use(bodyparser.json())
 //setting sessions
 app.use(
    session({
-    secret:"Hello world", 
-    resave:false, 
-    saveUninitialized:true,
-    cookie:{
-        maxAge:(864000)
-    }
-   })
+             secret:"Hello world", 
+             resave:false, 
+             saveUninitialized:true,
+             cookie:{
+                    maxAge:(864000)
+                    }
+              })
 )
 
 //setting passport configs
@@ -30,5 +30,4 @@ app.use(passport.authenticate('session'))
 
 
 app.use('',router )
-export{}
 export {app}
