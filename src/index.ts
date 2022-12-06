@@ -1,10 +1,16 @@
 import { app } from "./app"
-import Connect from './db/Connect'
+import Connect from './db/MongoDB/Connect'
+import { ConnectRedis } from "./db/Redis/Connect"
+
 const port:number = 3000
 
 
-Connect()
+
 
 app.listen(port,function ():void{
     console.log("server is listening at ", port)
 })
+
+Connect()
+ConnectRedis()
+

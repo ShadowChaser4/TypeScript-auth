@@ -1,6 +1,6 @@
 import passport from "passport";
 import passportLocal from 'passport-local'
-import { IUser, User } from "../db/UserStrategy";
+import { IUser, User } from "../db/MongoDB/UserStrategy";
 import { CallbackError, HydratedDocument } from "mongoose";
 import {compare} from 'bcrypt';
 const LocalStrategy = passportLocal.Strategy
@@ -12,7 +12,7 @@ passport.use(
   new LocalStrategy( (
  async function verify(username:string, password_entered:string, cb:Function){
     try{  
-    const user: IUser|null = await User.findOne({email:username.toLowerCase()})
+    const user: IUser |null = await User.findOne({email:username.toLowerCase()})
 
     if (! user) return cb(null, false)
 

@@ -1,4 +1,4 @@
-import { IUser, User} from "../../db/UserStrategy";
+import { IUser, User} from "../../db/MongoDB/UserStrategy";
 import { Router, Request,Response } from "express";
 import { CallbackError, HydratedDocument } from "mongoose";
 import { hash } from "bcrypt";

@@ -1,6 +1,6 @@
 import {passport }from "./PassportLocal";
 import { ExtractJwt, Strategy, StrategyOptions } from "passport-jwt";
-import { IUser, User } from "../db/UserStrategy";
+import { IUser, User } from "../db/MongoDB/UserStrategy";
 import { CallbackError } from "mongoose";
 
 
