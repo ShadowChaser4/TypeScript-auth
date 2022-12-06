@@ -1,7 +1,6 @@
 import { Schema, model } from "mongoose";
 
 
-
 interface IUser 
 {
     first_name:string,
@@ -9,16 +8,21 @@ interface IUser
     last_name:string,
     email: string, 
     password:string, 
-    role: string []
+    roles: string []
 }
 
 const userSchema:Schema = new Schema<IUser>({
     first_name : {type:String, required:true}, 
+
     middle_name :{type:String, required:false}, 
+
     last_name:{type:String, required:true}, 
-    email:{type:String, required:true, unique:true, index:true}, 
+
+    email:{type:String, required:true, unique:true, index:true,},
+
     password:{type:String, required:true}, 
-    role :{
+
+    roles :{
         type: [String], 
         required:true, 
         validate:{
@@ -26,16 +30,20 @@ const userSchema:Schema = new Schema<IUser>({
             {
                 if (arr.length > 3) return false
                 
+                console.log(arr)
                 const definedroles : string[] = ['staff', 'administrator', 'manager']
-                for ( let role in arr)
+                for ( let indx in arr)
                 {
-                   if (! definedroles.includes(role))  
+                    
+                    console.log( !definedroles.includes(arr[indx]))
+                   if (! definedroles.includes(arr[indx]))  
                    {
                        return false;
                    }
                 }
+                return true;
             }, 
-            message:" must be of type 'user' , 'administrator' or 'manager'"
+            message:" must be of type 'staff' , 'administrator' or 'manager'"
         }
     }
 

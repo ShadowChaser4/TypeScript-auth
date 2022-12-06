@@ -1,31 +1,19 @@
 import express from 'express';
-import bodyparser from 'body-parser'
-import {passport} from './auth/Passport'
-import router from './routes/router';
 const app  = express();
-const session = require("express-session")
+
+require("dotenv").config()
+import bodyparser from 'body-parser'
+import {passport} from './auth/Jwtconfig'
+import router from './routes/router';
 
 ///for parsing json////
 app.use(bodyparser.urlencoded({extended:false}))
 app.use(bodyparser.json())
 
 
-//setting sessions
-app.use(
-   session({
-             secret:"Hello world", 
-             resave:false, 
-             saveUninitialized:true,
-             cookie:{
-                    maxAge:(864000)
-                    }
-              })
-)
-
 //setting passport configs
 app.use(passport.initialize())
-app.use(passport.session())
-app.use(passport.authenticate('session'))
+
 
 
 

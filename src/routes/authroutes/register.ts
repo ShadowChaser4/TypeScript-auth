@@ -11,12 +11,12 @@ const router:Router = Router();
 router.post("", 
    (req:Request<IUser>, res:Response):void=>
     {
-       if(! req.isAuthenticated() ) 
-       {
-        res.status(403)
-        res.send({"message":"not authorized"})
-        return
-       }
+      //  if(! req.isAuthenticated() ) 
+      //  {
+      //   res.status(403)
+      //   res.send({"message":"not authorized"})
+      //   return
+      //  }
             const {email, first_name, middle_name, last_name,password, role} = req.body
 
             const user: HydratedDocument<IUser> = new User({
