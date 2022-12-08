@@ -1,9 +1,12 @@
 import { Router } from "express";
-
-
 const router:Router = Router()
+import {router as Authrouter} from './auth.routes'
+import errorhandler from "../utils/errrorhandler";
 
-const authroutes:Router = require("./authroutes/routes_auth").router
-router.use('/auth',authroutes)
+
+router.use("/auth", Authrouter)
+
+
+
 
 export default router

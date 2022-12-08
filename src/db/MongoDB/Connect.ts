@@ -5,7 +5,7 @@ import mongoose from 'mongoose'
 
  function Connect():void
 {
-    mongoose.connect('mongodb://127.0.0.1:27017/serverdb').then(
+    mongoose.connect(process.env.MONGODBURI!).then(
         ():void=>{
             console.log("database connected")
         }
