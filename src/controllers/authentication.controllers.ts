@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
-import { JwtPayload, verify } from "jsonwebtoken";
-import { HydratedDocument } from "mongoose";
-import { IUser, IUserMethods, User, UserModel } from "../model/User";
-const Joi = require("joi")
-import{login_service} from  '../services/authentication.services'
+import Joi from "joi";
+import{get_access_token, login_service} from  '../services/authentication.services'
 import { CreateUser } from "../services/mongodb.services";
 
 async function login(req:Request, res:Response, next:Function)
@@ -46,19 +43,24 @@ async function getaccesstoken(req:Request, res:Response, next:Function):Promise<
 {
     try 
     {
-        const {error} = refresh_token_validation(req.body)
-
+        const {error} = refresh_token_validation(req.query)
         if (error)
              return res.status(400).json({message:error.details[0].message})
-    
-        const unseralized:string | JwtPayload = verify(req.body.refresh_token, process.env.REFRESHKEY!) 
-        if ( typeof unseralized !='string')
+        
+        const {refresh_token} = req.query
+        if (typeof(refresh_token=='string')) 
         {
-            const user = await User.findOne({_id:unseralized._id})
-            if ( ! user) return res.status(404).json({message:"user not found"})
-
-            return res.json({"access_token": await  user.getAccessToken()})          
+            return res.json({access_token: await get_access_token(refresh_token as string)}) 
         }
+        else 
+        {
+            const error:string = JSON.stringify(
+                {"message":"Invalid token", "status":400}
+                )
+            throw new Error((error))
+        }
+    
+      
 }
     catch(error)
     {

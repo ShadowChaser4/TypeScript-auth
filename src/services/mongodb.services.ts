@@ -1,35 +1,34 @@
 import { HydratedDocument } from "mongoose";
 import { hash } from "bcrypt";
 import { IUser, User } from "../model/User";
-import {omit} from 'lodash'
+import { ILeave, Leave } from "../model/Leave";
 
 async function CreateUser(body:IUser):Promise<IUser>
-{
-    const {email,
-         first_name,
-         middle_name, 
-         last_name,
-         password, 
-         roles,
-          dob} = body //destructuring from req.body
-            
-    const hashed_password:string = await hash(password, 10) //generating hash from bcrypt
-   
+{        
+    const hashed_password:string = await hash(body.password, 10) //generating hash from bcrypt
+    body.password = hashed_password
     const user: HydratedDocument<IUser> = new User({
-        first_name: first_name, 
-        middle_name: middle_name, 
-        last_name : last_name, 
-        email:email, 
-        password: hashed_password, 
-        roles:roles, 
-        dob:dob, 
+       ...body
     })
-   return await user.save()
+    
+   return (await user.save())
+}
+
+async function CreateLeave(body:ILeave):Promise<ILeave>
+{
+    const leave: HydratedDocument<ILeave> = new Leave(
+        {
+            ...body
+        } 
+    )
+
+    return await (await leave.save()).populate("for")
 }
 
 
 
 
 export {
-    CreateUser
+    CreateUser, 
+    CreateLeave
 }

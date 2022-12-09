@@ -38,7 +38,7 @@ const userSchema:Schema = new Schema<IUser, UserModel,IUserMethods>({
 
     email:{type:String,
          required:[true, "enter a valid email address"], 
-         unique:true, 
+         unique:true,
          lowercase:true,
          match:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,
         },
@@ -59,31 +59,28 @@ const userSchema:Schema = new Schema<IUser, UserModel,IUserMethods>({
      },
     roles :{
         type: [String], 
-        required:true, 
+        required:[true, "roles are required for registration"], 
         validate:{
-            validator: function(arr :string[])
-            {
-                if (arr.length > 3) return false
+            validator: rolevalidator , 
+            message:" must be of type 'staff' , 'administrator' or 'manager'"
+        }
+    }
+
+})
+function rolevalidator(arr :string[]):Boolean //function that validates that entered values are only of 'staff' ,'administrator' or 'manager' type 
+  {
+                if (arr.length > 3) return false //only possible to add three or less than three role to a person
                 
-                console.log(arr)
                 const definedroles : string[] = ['staff', 'administrator', 'manager']
                 for ( let indx in arr)
                 {
-                    
-                    console.log( !definedroles.includes(arr[indx]))
                    if (! definedroles.includes(arr[indx]))  
                    {
                        return false;
                    }
                 }
                 return true;
-            }, 
-            message:" must be of type 'staff' , 'administrator' or 'manager'"
-        }
-    }
-
-})
-
+}
 
 userSchema.method("getAccessToken",async function ():Promise<string>
 {
@@ -93,7 +90,7 @@ userSchema.method("getAccessToken",async function ():Promise<string>
         roles:this.roles
     }
 
-    return sign(details, process.env.SECRETKEY !, {expiresIn:'5m'})
+    return sign(details, process.env.SECRETKEY !, {expiresIn:'15m'}) //15m for dev purpose only
 }
 )
 
@@ -108,7 +105,7 @@ userSchema.method("getRefreshToken",async function getRefreshToken ():Promise<st
 )
 
 userSchema.method( "getFullName", function getFullName():string{
-    return this.first_name + this.middle_name || null + this.last_name
+    return `${this.first_name} ${this.middle_name + ' '|| ' '}${this.last_name}`
 }
 )
 

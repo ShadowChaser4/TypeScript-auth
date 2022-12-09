@@ -2,15 +2,16 @@
 import { client } from '../db/Redis/Connect'
 import { User } from '../model/User'
 import { compare } from 'bcrypt'
+import {verify, JwtPayload} from 'jsonwebtoken'
 
-async function login_service(username:string, password:string):Promise<object>
+async function login_service(email:string, password:string):Promise<object>
 {
 
-  const user = await User.findOne({email:username}).select("-__v +password")
+  const user = await User.findOne({email:email}).select("-__v +password")
 
   if (! user) return {error:"User not found", status:400}
 
-  const match:Boolean  = await  compare(password, user.password)
+  const match:Boolean  = await compare(password,user.password)
   
   if (! match) return {error:"Password not match", status :400}
   
@@ -18,14 +19,26 @@ async function login_service(username:string, password:string):Promise<object>
   const refresh_token:string = await user.getRefreshToken()
 
   
-  return {access_token, refresh_token, user}
+  return {access_token, refresh_token,
+     user:{email:user.email, name:user.getFullName(), joinedAt:user.joinedAt, _id:user._id}
+    }
 
  
 }
 
 
-async function get_access_token(refresh_token:string)
-{}
+async function get_access_token(refresh_token:string):Promise<string|undefined>
+{
+  const unseralized:string | JwtPayload = verify(refresh_token, process.env.REFRESHKEY!) 
+  if ( typeof unseralized !='string')
+  {
+      const user = await User.findOne({_id:unseralized._id})
+      if ( ! user) throw new Error ((
+                                    JSON.stringify({'message':"User not found", 'status':"404"})
+                                    ))
+      return await  user.getAccessToken()       
+  }
+}
 
 
 
@@ -33,5 +46,6 @@ async function get_access_token(refresh_token:string)
 
 export 
 {
-    login_service
+    login_service, 
+    get_access_token
 }

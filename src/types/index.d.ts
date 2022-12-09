@@ -6,13 +6,14 @@ export interface authuser {
     first_name?:string, 
     middle_name?:string, 
     last_name?:string, 
-    roles?:string[]
+    roles?:string[], 
+    _id?:string
   }
   
   
 declare global {
  namespace Express {
-  interface User extends authuser {
+ export interface User extends authuser {
  
   }
  }

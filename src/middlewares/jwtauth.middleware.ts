@@ -20,7 +20,8 @@ function jwtverify(req:Request, res:Response, next:Function)
         const unseralized = verify(token !, process.env.SECRETKEY !)
         if (typeof unseralized != 'string')
         {
-            req.user = unseralized.payload
+            const {email, _id, roles} = unseralized
+            req.user = {email, _id, roles}
             return next()
         }
        
