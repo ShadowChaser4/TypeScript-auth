@@ -20,7 +20,7 @@ async function login_service(email:string, password:string):Promise<object>
 
   
   return {access_token, refresh_token,
-     user:{email:user.email, name:user.getFullName(), joinedAt:user.joinedAt, _id:user._id}
+     user:{email:user.email, name:user.getFullName(), joinedAt:user.joinedAt, _id:user._id, roles:user.roles}
     }
 
  

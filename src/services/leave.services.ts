@@ -9,7 +9,7 @@ async function create_leave_service(user:Express.User, body:ILeave)
     if (exist) throw ({status:400,message:"Leave around that time exist"}) //single line so no braces
 
     const leave = await CreateLeave(body)
-    return {leave, total_applicable_days: leave.totalleavedays()}
+    return {leave, total_applicable_days:await leave.totalleavedays()}
 }
 
 
