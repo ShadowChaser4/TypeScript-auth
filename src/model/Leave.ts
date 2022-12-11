@@ -86,7 +86,7 @@ leaveSchema.method("totalleavedays",async function totalleavedays():Promise<numb
     }
     
     const holidays =await Holiday.find({
-        starting_date:{ $gte: this.from_date}
+        starting_date:{ $gte: this.from_date, $lt:this.to_date}
     }) //we are retriving holidays where start of holiday is greater than or equal to leave starting day
     
     var holiday_days:number = 0
