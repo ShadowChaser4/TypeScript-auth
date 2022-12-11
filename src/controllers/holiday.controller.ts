@@ -11,7 +11,7 @@ async function createholiday(req:Request, res:Response, next:NextFunction):Promi
         if (error) return res.json( {"message":error.details[0].message})
      
         const holiday = await CreateHoliday(req.body)
-        return res.json({holiday, days:holiday.totaldays()})
+        return res.status(201).json({holiday, days:holiday.totaldays()})
     }
     catch(err)
     {

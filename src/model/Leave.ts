@@ -1,10 +1,11 @@
 
+import { number } from "joi"
 import { Model, model, Schema, Types } from "mongoose"
 import { Holiday } from "./Holidays"
 
 
 interface ILeave {
-    type:string, 
+    type:Types.ObjectId, 
     manager_comment:string, 
     leave_note :string, 
     from_date:Date, 
@@ -12,7 +13,8 @@ interface ILeave {
     for: Types.ObjectId
     reviewed_by?:Types.ObjectId, 
     reviewed?:Boolean, 
-    leave_status?:string
+    leave_status?:string, 
+    name?:string
 }
 
 interface ILeaveMethods 
@@ -20,14 +22,15 @@ interface ILeaveMethods
     totalleavedays():number
 }
 
+
 type LeaveModel = Model<ILeave,{},ILeaveMethods>
 
 const leaveSchema :Schema = new Schema<ILeave,LeaveModel,ILeaveMethods>(
     {
+        
         type:{
-            type:String,
-            enum :['sick', 'personal'], 
-            default:'personal',
+            type: Schema.Types.ObjectId, 
+            ref:"LeaveType",
             required:[true, "leave type required"]
         }, 
         manager_comment:{
@@ -87,8 +90,11 @@ leaveSchema.method("totalleavedays",async function totalleavedays():Promise<numb
     
     const holidays =await Holiday.find({
        $or:[ {starting_date:{ $gte: this.from_date, $lte:this.to_date} },
-            {starting_date:{$lte:this.from_date && this.to_date}}]
+            {starting_date:{$lte:this.from_date && this.to_date}}, 
+            {starting_date:{$gte: this.from_date && this.to_date} }
+            ]
     }) //we are retriving holidays where start of holiday is greater than or equal to leave starting day and less than leave end day
+       //or greater than or equal to leave starting day and greater than or equal to leave end day
     
     console.log(weekend, totaldays)
     var holiday_days:number = 0
@@ -110,4 +116,28 @@ leaveSchema.method("totalleavedays",async function totalleavedays():Promise<numb
 )
 
 const Leave = model<ILeave, LeaveModel>("Leave", leaveSchema)
-export {Leave, ILeave,LeaveModel}
+
+
+
+interface ILeaveTypes
+{
+    name:string,
+    per_month_allowance:string,
+}
+
+const leavetypeSchema:Schema = new Schema<ILeaveTypes> (
+    {
+        name:{
+            type:String, 
+            required:[true, "leave name is required"]
+        }, 
+        per_month_allowance:{
+            type:String, 
+            default:"Not applicable"
+        }
+    }
+)
+
+const LeaveType = model<ILeaveTypes>("LeaveType", leavetypeSchema)
+
+export {Leave, ILeave,LeaveModel, ILeaveTypes,LeaveType}

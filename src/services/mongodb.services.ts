@@ -3,16 +3,17 @@ import { hash } from "bcrypt";
 import { IUser, User } from "../model/User";
 import { ILeave, Leave } from "../model/Leave";
 import { Holiday, IHolidays } from "../model/Holidays";
+import crypto from'crypto'
 
-async function CreateUser(body:IUser):Promise<IUser>
-{        
+async function CreateUser(body:IUser)
+{ 
     const hashed_password:string = await hash(body.password, 10) //generating hash from bcrypt
     body.password = hashed_password
     const user: HydratedDocument<IUser> = new User({
        ...body
     })
-
-   return (await user.save())
+  
+   return await user.save()
 }
 
 async function CreateLeave(body:ILeave)
@@ -23,7 +24,7 @@ async function CreateLeave(body:ILeave)
         } 
     )
 
-    return (await leave.save()).populate("for")
+    return (await leave.save()).populate("for type")
 }
 
 async function CreateHoliday(body:IHolidays)

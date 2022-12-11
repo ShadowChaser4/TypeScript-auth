@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import Joi from "joi";
-import{get_access_token, login_service} from  '../services/authentication.services'
+import { NextFunction, Request, Response } from "express";
+import Joi, { ValidationResult } from "joi";
+import{change_password, get_access_token, login_service} from  '../services/authentication.services'
 import { CreateUser } from "../services/mongodb.services";
 
 async function login(req:Request, res:Response, next:Function)
@@ -11,8 +11,8 @@ async function login(req:Request, res:Response, next:Function)
     if (error) 
         return res.status(400).json({message:error.details[0].message})
         //single line so no brackets
-    const {username, password} = req.body
-    return  res.json( await login_service(username,password))
+    const {email, password} = req.body
+    return  res.json( await login_service(email,password))
    }
    catch(error)
    {
@@ -65,13 +65,25 @@ async function getaccesstoken(req:Request, res:Response, next:Function):Promise<
     }
 }
 
+async function changepassword(req:Request, res:Response, next:NextFunction)
+{
+    try 
+    {
+        const {password,password2,old_password} = req.body
+        res.json(await change_password(old_password, password, req.user !)) 
+    }
+    catch(error)
+    {
+      next(error)
+    }
+}
 
-
+///joi validation validating req.body////
 function loginvalidation(body:object)
 {
     const schema = Joi.object(
         {
-            username: Joi.string().email(), 
+            email: Joi.string().email(), //must contain username 
             password: Joi.string()
         }
     ); 
@@ -84,7 +96,7 @@ function registervalidation(body:object)
      const schema = Joi.object(
     {
         email: Joi.string().email().required(), 
-        password: Joi.string().required(), 
+        password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-_+`~'"]){8,}/), 
         dob:Joi.date().required(), 
         first_name:Joi.string().required(), 
         last_name:Joi.string().required(), 
@@ -106,10 +118,24 @@ function refresh_token_validation(body:object)
     return schema.validate(body)
 }
 
+function change_password_validation(body:object):ValidationResult
+{
+    const  schema = Joi.object(
+        {
+            old_password: Joi.string().required(), 
+            password:Joi.string().required().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-+_~`"']){8,}/), 
+            password2: Joi.ref('password')
+        }
+    ).
+    xor('password','old_password')
+    .with('password','password2')
+    return schema.validate(body)
+}
 
 
 export{
     login, 
     register, 
-    getaccesstoken
+    getaccesstoken, 
+    changepassword
 }

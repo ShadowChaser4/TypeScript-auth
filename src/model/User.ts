@@ -45,8 +45,7 @@ const userSchema:Schema = new Schema<IUser, UserModel,IUserMethods>({
 
     password:{type:String, 
         required:[true, "Enter the password"], 
-        select:false, //hide password, 
-        match:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}/g
+        select:false, //hide password,  
     }, 
 
     joinedAt: {
@@ -106,9 +105,10 @@ userSchema.method("getRefreshToken",async function getRefreshToken ():Promise<st
 )
 
 userSchema.method( "getFullName", function getFullName():string{
-    return `${this.first_name} ${this.middle_name + ' '|| ' '}${this.last_name}`
+    return `${this.first_name} ${this.middle_name || ' '}${this.last_name}`
 }
 )
+
 
 const User = model <IUser, UserModel> ("User", userSchema)
 export{User , IUser, IUserMethods, UserModel}
