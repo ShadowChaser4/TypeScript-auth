@@ -54,10 +54,7 @@ async function getaccesstoken(req:Request, res:Response, next:Function):Promise<
         }
         else 
         {
-            const error:string = JSON.stringify(
-                {"message":"Invalid token", "status":400}
-                )
-            throw new Error((error))
+            throw ({message:"Invalid request, no token found in query",status:400})
         }
     
       

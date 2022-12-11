@@ -9,11 +9,11 @@ async function login_service(email:string, password:string):Promise<object>
 
   const user = await User.findOne({email:email}).select("-__v +password")
 
-  if (! user) return {error:"User not found", status:400}
+  if (! user) throw ({message:"User not found", status:404})
 
   const match:Boolean  = await compare(password,user.password)
   
-  if (! match) return {error:"Password not match", status :400}
+  if (! match) throw ({message:"Invalid password", status:400})
   
   const access_token:string = await user.getAccessToken()
   const refresh_token:string = await user.getRefreshToken()
@@ -33,9 +33,7 @@ async function get_access_token(refresh_token:string):Promise<string|undefined>
   if ( typeof unseralized !='string')
   {
       const user = await User.findOne({_id:unseralized._id})
-      if ( ! user) throw new Error ((
-                                    JSON.stringify({'message':"User not found", 'status':"404"})
-                                    ))
+      if ( ! user) throw ({message:"User not found", status:404})
       return await  user.getAccessToken()       
   }
 }

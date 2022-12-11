@@ -1,4 +1,3 @@
-import { compare } from "bcrypt";
 import { Schema, model, Model } from "mongoose";
 import { sign } from "jsonwebtoken";
 
@@ -11,7 +10,8 @@ interface IUser
     password:string, 
     roles: string [], 
     joinedAt: Date, 
-    dob: Date
+    dob: Date, 
+    startingfrom:Date, 
 }
 
 interface IUserMethods
@@ -44,8 +44,9 @@ const userSchema:Schema = new Schema<IUser, UserModel,IUserMethods>({
         },
 
     password:{type:String, 
-        required:[true, "Enter your password"], 
-        select:false //hide password
+        required:[true, "Enter the password"], 
+        select:false, //hide password, 
+        match:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}/g
     }, 
 
     joinedAt: {
@@ -110,10 +111,4 @@ userSchema.method( "getFullName", function getFullName():string{
 )
 
 const User = model <IUser, UserModel> ("User", userSchema)
-
-
-
-
-
-
 export{User , IUser, IUserMethods, UserModel}

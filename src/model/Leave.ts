@@ -1,7 +1,6 @@
 
-import { string } from "joi"
 import { Model, model, Schema, Types } from "mongoose"
-
+import { Holiday } from "./Holidays"
 
 
 interface ILeave {
@@ -18,12 +17,12 @@ interface ILeave {
 
 interface ILeaveMethods 
 {
-    totaldays():number
+    totalleavedays():number
 }
 
 type LeaveModel = Model<ILeave,{},ILeaveMethods>
 
-const leaveSchema :Schema = new Schema<ILeave, LeaveModel,ILeaveMethods>(
+const leaveSchema :Schema = new Schema<ILeave,LeaveModel,ILeaveMethods>(
     {
         type:{
             type:String,
@@ -69,30 +68,42 @@ const leaveSchema :Schema = new Schema<ILeave, LeaveModel,ILeaveMethods>(
 )
 
 
-const Leave = model<ILeave, LeaveModel>("Leave", leaveSchema)
 
-
-
-leaveSchema.method("totalleavedays", function totalleavedays():number
+leaveSchema.method("totalleavedays",async function totalleavedays():Promise<number>
 {
     var from_date = this.from_date; 
-    var till_date = this.to_date
     var weekend:number = 0
-
-    while(from_date <= till_date)
-      {
-       (from_date.getDay() == 6)? weekend++ : null; //check if the day is saturday .getDay() gives no. of day 0-6 , 6 being saturday
-    from_date = new Date(from_date.getTime() + 1000 * 60 * 60 * 24)
-    }
-    
-    var totaldays = (this.to_date.getTime() - this.from_date.getTime()) /(1000 * 60 * 60 * 24) //what's happening?
+    const totaldays = (this.to_date.getTime() - this.from_date.getTime()) /(1000 * 60 * 60 * 24) + 1 //what's happening?
     // .getTime() method delivers total time from unix epoch start in miliseconds 
     // by dividing miliseconds with 1000 we get seconds and % by 60 gives minutes and % by 60 gives hours similarly we % by 24
-    //to get no. of days
+    //to get no. of days 
+    // +1 for anamoly in days calcutaion, since calculating from 0:00 hours 1 day gets missing
+
+    while(from_date.getTime() <= this.to_date.getTime())
+      {
+       (from_date.getDay() == 6)? weekend++ : null; //check if the day is saturday .getDay() gives no. of day 0-6 , 6 being saturday
+       from_date = new Date(from_date.getTime() + 1000 * 60 * 60 * 24) 
+    }
     
-    return totaldays - weekend
+    const holidays =await Holiday.find({
+        starting_date:{ $gte: this.from_date}
+    }) //we are retriving holidays where start of holiday is greater than or equal to leave starting day
+    
+    var holiday_days:number = 0
+    for (let holiday of holidays)
+    {
+         var startdate = holiday.starting_date
+         while (startdate.getTime() <= holiday.ending_date.getTime() && startdate.getTime() <= this.to_date) 
+         /* Loop will continue to rull till it gets to holiday ending date or till leave ending date*/
+         {
+            (startdate.getDay()!=6)?holiday_days++: null
+            startdate = new Date(startdate.getTime() + 1000 * 60 * 60 *24)
+         }
+    }
+
+    return totaldays - weekend -holiday_days
 } 
 )
 
-
+const Leave = model<ILeave, LeaveModel>("Leave", leaveSchema)
 export {Leave, ILeave,LeaveModel}

@@ -10,19 +10,19 @@ async function CreateUser(body:IUser):Promise<IUser>
     const user: HydratedDocument<IUser> = new User({
        ...body
     })
-    
+
    return (await user.save())
 }
 
-async function CreateLeave(body:ILeave):Promise<ILeave>
+async function CreateLeave(body:ILeave)
 {
-    const leave: HydratedDocument<ILeave> = new Leave(
+    const leave = new Leave(
         {
             ...body
         } 
     )
 
-    return await (await leave.save()).populate("for")
+    return (await leave.save()).populate("for")
 }
 
 
