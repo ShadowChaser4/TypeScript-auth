@@ -14,10 +14,11 @@ function errorhandler(err:Error| any,req:Request, res:Response, next:Function)
         return res.status(500).json({"message":err.message})
     }
 
-    if (err.name == 'JsonWebTokenError')
+    if (err.name == 'JsonWebTokenError'|| err.name == "TokenExpiredError")
     {
         return res.status(401).json({"message":err.message})
     }
+console.log(err.name)
 return res.status(err.status||500).json({message:err.message})
 
  

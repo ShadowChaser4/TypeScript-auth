@@ -86,22 +86,26 @@ leaveSchema.method("totalleavedays",async function totalleavedays():Promise<numb
     }
     
     const holidays =await Holiday.find({
-        starting_date:{ $gte: this.from_date, $lt:this.to_date}
+       $or:[ {starting_date:{ $gte: this.from_date, $lte:this.to_date} },
+            {starting_date:{$lte:this.from_date && this.to_date}}]
     }) //we are retriving holidays where start of holiday is greater than or equal to leave starting day and less than leave end day
     
+    console.log(weekend, totaldays)
     var holiday_days:number = 0
     for (let holiday of holidays)
     {
-         var startdate = holiday.starting_date
+         var startdate = this.from_date //starting from leave's first day
          while (startdate.getTime() <= holiday.ending_date.getTime() && startdate.getTime() <= this.to_date) 
          /* Loop will continue to run till it gets to holiday ending date or till leave ending date*/
          {
-            (startdate.getDay()!=6)?holiday_days++: null
+            const condition:Boolean = (startdate.getDay()!=6 && startdate.getTime() >= holiday.starting_date.getTime())
+            //making sure that the day is not weekend and day is greater than holiday starting date
+            condition?holiday_days++: null //if condition fails null, else add to holiday days
             startdate = new Date(startdate.getTime() + 1000 * 60 * 60 *24)
          }
     }
-    console.log(totaldays - weekend - holiday_days)
-    return totaldays - weekend -holiday_days
+    
+    return totaldays - weekend - holiday_days
 } 
 )
 

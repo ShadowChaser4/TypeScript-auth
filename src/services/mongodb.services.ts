@@ -28,6 +28,9 @@ async function CreateLeave(body:ILeave)
 
 async function CreateHoliday(body:IHolidays)
 {
+    const exist = await Holiday.exists({ starting_date:{ $lte: body.starting_date }, ending_date:{$gte: body.ending_date} })
+    if (exist) throw ({"status":400, "message":"Holiday's starting and ending date clashes with existing holiday"})
+
     const holiday = new Holiday(
         {
             ...body
