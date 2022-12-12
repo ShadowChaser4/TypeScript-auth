@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Joi, { ValidationResult } from "joi";
-import{change_password, get_access_token, login_service} from  '../services/authentication.services'
-import { CreateUser } from "../services/mongodb.services";
+import{change_password, get_access_token, login_service, logout_service} from  '../services/authentication.services'
 
 async function login(req:Request, res:Response, next:Function)
 {
@@ -18,24 +17,6 @@ async function login(req:Request, res:Response, next:Function)
    {
     next(error)
    }
-}
-
-
-async function register(req:Request<Express.User>, res:Response, next:Function)
-{
-    try 
-    {
-        const {error} = registervalidation(req.body)
-        if (error)
-          return  res.status(400).json({"message":error.details[0].message})
-
-        res.status(201).json(await CreateUser(req.body) ) 
-        
-    }
-    catch(error)
-    {
-        next(error)
-    }
 }
 
 
@@ -69,7 +50,9 @@ async function changepassword(req:Request, res:Response, next:NextFunction)
 {
     try 
     {
-        const {password,password2,old_password} = req.body
+        const {error} = change_password_validation(req.body)
+        if (error) throw ({"status":400, "message":error.details[0].message})
+        const {password,old_password} = req.body
         res.json(await change_password(old_password, password, req.user !)) 
     }
     catch(error)
@@ -78,6 +61,21 @@ async function changepassword(req:Request, res:Response, next:NextFunction)
     }
 }
 
+
+async function logout (req:Request, res:Response, next:NextFunction)
+{
+    try 
+    {
+      const {error}  = logoutvalidation(req.body)
+      if (error) throw ({"status":400, "message":"Refresh token missing in body"})
+      const refresh_token:string = req.body.refresh_token
+      return  res.json(await logout_service(req.headers.authorization!,refresh_token, req.user!) )
+    }
+    catch(err)
+    {
+        next(err)
+    }
+}
 ///joi validation validating req.body////
 function loginvalidation(body:object)
 {
@@ -91,22 +89,7 @@ function loginvalidation(body:object)
     return schema.validate(body)
 }
 
-function registervalidation(body:object)
-{
-     const schema = Joi.object(
-    {
-        email: Joi.string().email().required(), 
-        password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-_+`~'"]){8,}/), 
-        dob:Joi.date().required(), 
-        first_name:Joi.string().required(), 
-        last_name:Joi.string().required(), 
-        middle_name: Joi.string(), 
-        roles: Joi.array().items(Joi.string()).required()
-    }
-   )
-    return schema.validate(body)
-   
-}
+
 
 function refresh_token_validation(body:object)
 {
@@ -132,10 +115,20 @@ function change_password_validation(body:object):ValidationResult
     return schema.validate(body)
 }
 
+function logoutvalidation(body:object):ValidationResult
+{
+    const schema = Joi.object(
+        {
+            refresh_token:Joi.string().required()
+        }
+    )
+return schema.validate(body)
+}
+
 
 export{
     login, 
-    register, 
     getaccesstoken, 
-    changepassword
+    changepassword, 
+    logout
 }

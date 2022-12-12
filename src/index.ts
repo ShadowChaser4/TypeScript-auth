@@ -17,5 +17,5 @@ app.listen(port,function ():void{
 
 authapp.listen(authport, ()=>console.log(" auth server is listening at ", authport))
 Connect()
-// ConnectRedis()
+ConnectRedis()
 

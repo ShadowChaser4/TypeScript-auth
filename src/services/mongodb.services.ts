@@ -3,7 +3,8 @@ import { hash } from "bcrypt";
 import { IUser, User } from "../model/User";
 import { ILeave, Leave } from "../model/Leave";
 import { Holiday, IHolidays } from "../model/Holidays";
-import crypto from'crypto'
+import {     } from "express";
+
 
 async function CreateUser(body:IUser)
 { 
@@ -14,6 +15,17 @@ async function CreateUser(body:IUser)
     })
   
    return await user.save()
+}
+
+async function GetUser(name?:string, offset_s?:string)
+{
+    const offset = parseInt(offset_s!) || 0
+    name = name || ''
+    const users = await User.find({
+        $or:[{first_name: { $regex:name ,$options: 'gi'}}, {middle_name:{$regex:name, $options:'gi'}}, {last_name:{$regex:name, $options:"gi"}} ]
+    }).skip(offset).limit(10)
+
+    return users
 }
 
 async function CreateLeave(body:ILeave)
@@ -47,5 +59,6 @@ async function CreateHoliday(body:IHolidays)
 export {
     CreateUser, 
     CreateLeave, 
-    CreateHoliday
+    CreateHoliday, 
+    GetUser
 }

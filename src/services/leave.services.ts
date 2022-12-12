@@ -24,7 +24,7 @@ async function create_leave_type_service(body:ILeaveTypes):Promise<ILeaveTypes>
         ...body
     }
   )
-  return await (await type.save()).populate("type")
+  return await type.save()
 }
 
 

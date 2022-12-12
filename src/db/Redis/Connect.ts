@@ -1,18 +1,18 @@
 import { createClient } from "redis";
 
-const client = createClient()
+const Redisclient = createClient()
 
 async function ConnectRedis():Promise<void> {
-    client.connect()
+    Redisclient.connect()
 
-    client.on("error", (err):void=>{
+    Redisclient.on("error", (err):void=>{
        console.log("Redis Client error", err)
     })
 
-    client.on("connect", ():void=>{
+    Redisclient.on("connect", ():void=>{
         console.log("Redis connected")
     }) 
 }
 
 
-export{ConnectRedis, client}
+export{ConnectRedis, Redisclient}
