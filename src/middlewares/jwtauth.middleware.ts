@@ -16,8 +16,7 @@ async function jwtverify(req:Request, res:Response, next:Function)
     const token = bearer?.split(" ")[1]
     
    const in_blacklist = await Redisclient.get(`bl_${token}`)
-   console.log(in_blacklist)
-   if (!in_blacklist) res.status(401).json({"message":"Invalid token", "status":400})
+   if ( in_blacklist) res.status(401).json({"message":"Invalid token", "status":400})
 
     try 
     {

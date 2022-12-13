@@ -1,6 +1,7 @@
 import { NextFunction, Request,Response } from "express";
-import Joi, {  ValidationResult } from 'joi'
-import { CreateUser, GetUser } from "../services/mongodb.services";
+import Joi, {  number, ValidationResult } from 'joi'
+import { omit } from "lodash";
+import { CreateUser, GetUser, UpdateOwnDetails } from "../services/mongodb.services";
 
 async function getuser(req:Request, res:Response, next:NextFunction)
 {
@@ -9,7 +10,10 @@ try
     const {error} = getuservalidation(req.query)
     if (error) throw ({"status":400, "message":error.details[0].message})
 
-    return res.json(await GetUser(req.query.name as string, req.query.offset as string))
+    return res.json(await GetUser(req.query.name as string,
+                                 req.query.offset as string,
+                                 req.query.designation as string
+                                 ))
 }
 catch(err){
 next(err)
@@ -17,20 +21,38 @@ next(err)
 }
 
 
-async function register(req:Request<Express.User>, res:Response, next:Function)
+async function register(req:Request<Express.User>, res:Response, next:NextFunction)
 {
     try 
     {
         const {error} = registervalidation(req.body)
         if (error)
           return  res.status(400).json({"message":error.details[0].message})
-
-        res.status(201).json(await CreateUser(req.body) ) 
+        const user = await CreateUser(req.body)
+        
+        const filtered_user = omit(user.toObject(), ['password'])
+        res.status(201).json(filtered_user ) 
         
     }
     catch(error)
     {
         next(error)
+    }
+}
+
+async function update_own_details(req:Request<Express.User>, res:Response, next:NextFunction)
+{
+    try 
+    {
+       const {error} = update_own_detailsvalidation(req.body)
+
+       if (error) throw ({"status":400, "message":error.details[0].message})
+
+       res.json(await UpdateOwnDetails(req.body, req.user!._id!))
+    }
+    catch(err)
+    {
+        next(err)
     }
 }
 
@@ -48,9 +70,15 @@ function registervalidation(body:object)
         first_name:Joi.string().required(), 
         last_name:Joi.string().required(), 
         middle_name: Joi.string(), 
-        roles: Joi.array().items(Joi.string()).required()
+        roles: Joi.array().items(Joi.string()).required(), 
+        designation:Joi.string().required(), 
+        starting_from :Joi.date().required(), 
+        emergency_contact:Joi.number(), 
+        relation_to_emergency_contact: Joi.string(), 
+        reports_to:Joi.string(), 
+        contact_number:Joi.number()
     }
-   )
+   ).xor("emergency_contact","contact_number")
     return schema.validate(body)
    
 }
@@ -60,15 +88,29 @@ function getuservalidation(body:object):ValidationResult
     const schema = Joi.object(
         {
             name:Joi.string(), 
-            offset:Joi.number()
+            offset:Joi.number(), 
+            designation:Joi.string()
         }
     )
     return schema.validate(body)
 }
 
 
+function update_own_detailsvalidation(body:object):ValidationResult
+
+{
+    const schema = Joi.object(
+        {
+            emergency_contact:Joi.number(), 
+            relation_to_emergency_contact: Joi.string(), 
+        }
+    ).with("emergency_contact", "relation_to_emergency_contact")
+    return schema.validate(body)
+}
+
 export 
 {
     register, 
-    getuser
+    getuser, 
+    update_own_details
 }

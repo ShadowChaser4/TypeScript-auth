@@ -3,7 +3,6 @@ import { hash } from "bcrypt";
 import { IUser, User } from "../model/User";
 import { ILeave, Leave } from "../model/Leave";
 import { Holiday, IHolidays } from "../model/Holidays";
-import {     } from "express";
 
 
 async function CreateUser(body:IUser)
@@ -17,13 +16,14 @@ async function CreateUser(body:IUser)
    return await user.save()
 }
 
-async function GetUser(name?:string, offset_s?:string)
+async function GetUser(name?:string, offset_s?:string, designation?:string)
 {
     const offset = parseInt(offset_s!) || 0
     name = name || ''
     const users = await User.find({
-        $or:[{first_name: { $regex:name ,$options: 'gi'}}, {middle_name:{$regex:name, $options:'gi'}}, {last_name:{$regex:name, $options:"gi"}} ]
-    }).skip(offset).limit(10)
+        $or:[{first_name: { $regex:name ,$options: 'ix'}}, {middle_name:{$regex:name, $options:'ix'}}, {last_name:{$regex:name, $options:"ix"}}],
+          $and:[ {designation:{$regex:designation || '', $options:'x'}} ]
+    }).skip(offset).limit(10).select("-__v").sort("first_name")
 
     return users
 }
@@ -54,11 +54,22 @@ async function CreateHoliday(body:IHolidays)
 }
 
 
+async function UpdateOwnDetails(body:IUser, id:string)
+{
+    const user = await User.findOneAndUpdate({_id:id}, {...body}, {useFindAndModify:false, new:true}) 
+    
+    if(!user) throw({"status":404, "message":"No user found"})
+    return await user.save()
+
+}
+
+
 
 
 export {
     CreateUser, 
     CreateLeave, 
     CreateHoliday, 
-    GetUser
+    GetUser, 
+    UpdateOwnDetails
 }

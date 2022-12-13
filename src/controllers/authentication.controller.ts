@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Joi, { ValidationResult } from "joi";
 import{change_password, get_access_token, login_service, logout_service} from  '../services/authentication.services'
+import { Redisclient } from "../db/Redis/Connect";
 
 async function login(req:Request, res:Response, next:Function)
 {
@@ -31,6 +32,7 @@ async function getaccesstoken(req:Request, res:Response, next:Function):Promise<
         const {refresh_token} = req.query
         if (typeof(refresh_token=='string')) 
         {
+         
             return res.json({access_token: await get_access_token(refresh_token as string)}) 
         }
         else 
@@ -69,7 +71,8 @@ async function logout (req:Request, res:Response, next:NextFunction)
       const {error}  = logoutvalidation(req.body)
       if (error) throw ({"status":400, "message":"Refresh token missing in body"})
       const refresh_token:string = req.body.refresh_token
-      return  res.json(await logout_service(req.headers.authorization!,refresh_token, req.user!) )
+     const response = await  logout_service(req.headers.authorization?.split(" ")[1]!, refresh_token, req.user !)
+      return  res.json(response)
     }
     catch(err)
     {

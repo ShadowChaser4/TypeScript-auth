@@ -1,5 +1,6 @@
-import { Schema, model, Model } from "mongoose";
+import { Schema, model, Model, Types } from "mongoose";
 import { sign } from "jsonwebtoken";
+
 
 interface IUser 
 {
@@ -12,6 +13,11 @@ interface IUser
     joinedAt: Date, 
     dob: Date, 
     startingfrom:Date, 
+    designation:string, 
+    emergency_contact:number, 
+    relation_to_emergency_contact:string
+    contact_number: number[], 
+    reports_to:Types.ObjectId
 }
 
 interface IUserMethods
@@ -64,7 +70,27 @@ const userSchema:Schema = new Schema<IUser, UserModel,IUserMethods>({
             validator: rolevalidator , 
             message:" must be of type 'staff' , 'administrator' or 'manager'"
         }
-    }
+    }, 
+    designation:{
+        type: String, 
+        required:[true, "enter designation of the user"]
+    }, 
+    emergency_contact:{
+        type:Number, 
+    }, 
+    relation_to_emergency_contact:{
+        type:String, 
+    },
+    contact_number:{
+        type:[Number], 
+        required:[true, "Enter contact number"]
+    }, 
+    reports_to:
+    {
+        type: Schema.Types.ObjectId, 
+        ref:"User"
+    }, 
+ 
 
 })
 function rolevalidator(arr :string[]):Boolean //function that validates that entered values are only of 'staff' ,'administrator' or 'manager' type 

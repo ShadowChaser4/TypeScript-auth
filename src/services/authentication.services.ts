@@ -21,7 +21,7 @@ async function login_service(email:string, password:string):Promise<object>
 
   
   return {access_token, refresh_token,
-     user:{email:user.email, name:user.getFullName(), joinedAt:user.joinedAt, _id:user._id, roles:user.roles}
+     user:{email:user.email, name:user.getFullName(), started_from:user.startingfrom, _id:user._id, roles:user.roles, designation:user.designation}
     }
 
  
@@ -31,9 +31,10 @@ async function login_service(email:string, password:string):Promise<object>
 async function get_access_token(refresh_token:string):Promise<string|undefined>
 {
   const in_blacklist = await Redisclient.get(`bl_${refresh_token}`)
-  if (! in_blacklist) throw ({"status":400,"message":"Invalid token"})
-  const unseralized:string | JwtPayload = verify(refresh_token, process.env.REFRESHKEY!) //verifying the refresh 
+  if ( in_blacklist) throw ({"status":400,"message":"Invalid token"})
 
+  const unseralized:string | JwtPayload = verify(refresh_token, process.env.REFRESHKEY!) //verifying the refresh 
+  
   if ( typeof unseralized !='string')
   {
       const user = await User.findOne({_id:unseralized._id})
@@ -67,13 +68,14 @@ async function logout_service(access_token:string, refresh_token:string, user:Ex
  //verifying refresh_token is valid
  if (typeof unseralized !='string') //typescript mandated check that infact decoded info isn't string
  {
-    console.log(user._id)
-    console.log(unseralized._id)
+   
     if (user._id != unseralized._id) throw({"message":"invalid access and refresh token", "status":400})
      //making sure that refresh and access token is of same user
 
      //blacklisting access and refresh token
     const value :string= "blacklisted"
+    console.log("access token", access_token)
+    console.log("refresh token", refresh_token)
     await Redisclient.setEx(`bl_${refresh_token}`,unseralized.exp as number,value) //keep value until the token expires
     await Redisclient.setEx(`bl_${access_token}`, 60*15, value) //keep value for 15 minutes
 
