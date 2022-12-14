@@ -1,5 +1,5 @@
 import { NextFunction, Request,Response } from "express";
-import Joi, {  number, ValidationResult } from 'joi'
+import Joi, { ValidationResult } from 'joi'
 import { omit } from "lodash";
 import { CreateUser, GetUser, UpdateOwnDetails } from "../services/mongodb.services";
 
@@ -9,10 +9,12 @@ try
 {
     const {error} = getuservalidation(req.query)
     if (error) throw ({"status":400, "message":error.details[0].message})
-
-    return res.json(await GetUser(req.query.name as string,
-                                 req.query.offset as string,
-                                 req.query.designation as string
+    
+    const {name, offset, designation, email} = req.query
+    return res.json(await GetUser( name as string, 
+                                   offset as string, 
+                                   designation as string, 
+                                   email as string
                                  ))
 }
 catch(err){
@@ -67,10 +69,10 @@ function registervalidation(body:object)
         email: Joi.string().email().required(), 
         password: Joi.string().pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-_+`~'"]){8,}/), 
         dob:Joi.date().required(), 
-        first_name:Joi.string().required(), 
-        last_name:Joi.string().required(), 
-        middle_name: Joi.string(), 
-        roles: Joi.array().items(Joi.string()).required(), 
+        first_name:Joi.string().required().max(50), 
+        last_name:Joi.string().required().max(50), 
+        middle_name: Joi.string().max(50), 
+        roles: Joi.array().items(Joi.string().valid("administrator", "staff", "role")).required(), 
         designation:Joi.string().required(), 
         starting_from :Joi.date().required(), 
         emergency_contact:Joi.number(), 
@@ -89,7 +91,8 @@ function getuservalidation(body:object):ValidationResult
         {
             name:Joi.string(), 
             offset:Joi.number(), 
-            designation:Joi.string()
+            designation:Joi.string(), 
+            email:Joi.string().email()
         }
     )
     return schema.validate(body)

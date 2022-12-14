@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import Joi, { ValidationResult } from "joi";
-import{change_password, get_access_token, login_service, logout_service} from  '../services/authentication.services'
-import { Redisclient } from "../db/Redis/Connect";
+import{change_password, get_access_token, login_service, logout_service, reset_password_service} from  '../services/authentication.services'
+import { User } from "../model/User";
+
 
 async function login(req:Request, res:Response, next:Function)
 {
@@ -61,6 +62,28 @@ async function changepassword(req:Request, res:Response, next:NextFunction)
     {
       next(error)
     }
+}
+
+async function resetpassword(req:Request, res:Response, next:NextFunction)
+{
+ try 
+ {
+    const {error} =Joi.object({
+                                email:Joi.string().email().required()
+                            }).validate(req.body) //validating that req.body only contains email
+    if (error) throw ({"status":400, "message":error.details[0].message})
+
+    const user = await User.findOne({email:req.body.email})
+    if (! user) throw ({"status":404, "message":"User not found"})
+
+    reset_password_service(user,req.hostname)
+    
+    res.status(200).json({"message":"Successfully reset"})
+ }
+ catch(err)
+ {
+    next(err)
+ }
 }
 
 
@@ -133,5 +156,6 @@ export{
     login, 
     getaccesstoken, 
     changepassword, 
-    logout
+    logout, 
+    resetpassword
 }

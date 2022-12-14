@@ -1,5 +1,5 @@
 
-import { number } from "joi"
+import { number, string } from "joi"
 import { Model, model, Schema, Types } from "mongoose"
 import { Holiday } from "./Holidays"
 
@@ -14,7 +14,8 @@ interface ILeave {
     reviewed_by?:Types.ObjectId, 
     reviewed?:Boolean, 
     leave_status?:string, 
-    name?:string
+    name?:string,
+    total_leave?:string
 }
 
 interface ILeaveMethods 
@@ -66,13 +67,18 @@ const leaveSchema :Schema = new Schema<ILeave,LeaveModel,ILeaveMethods>(
             enum:['pending', 'approved', 'not approved'], 
             default:'pending'
         }
+        , 
+        total_leave: 
+        {
+            type:String, 
+        }
 
     }
 )
 
 
 
-leaveSchema.method("totalleavedays",async function totalleavedays():Promise<number>
+leaveSchema.method("totalleavedays",async function totalleavedays()
 {
     var from_date = this.from_date; 
     var weekend:number = 0
@@ -110,8 +116,7 @@ leaveSchema.method("totalleavedays",async function totalleavedays():Promise<numb
             startdate = new Date(startdate.getTime() + 1000 * 60 * 60 *24)
          }
     }
-    
-    return totaldays - weekend - holiday_days
+     this.total_leave = (totaldays - weekend - holiday_days)
 } 
 )
 

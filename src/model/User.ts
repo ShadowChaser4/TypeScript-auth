@@ -1,5 +1,6 @@
 import { Schema, model, Model, Types } from "mongoose";
 import { sign } from "jsonwebtoken";
+import crypto from 'crypto'
 
 
 interface IUser 
@@ -25,6 +26,7 @@ interface IUserMethods
     getAccessToken(): string 
     getRefreshToken(): string , 
     getFullName(): string, 
+    generatePasswordResetToken():string
 
 }
 
@@ -135,6 +137,15 @@ userSchema.method( "getFullName", function getFullName():string{
 }
 )
 
+userSchema.method("generatePasswordResetToken",  function generatePasswordResetToken():string
+{
+    const randomString = crypto.randomBytes(20).toString('hex')
+    this.PasswordResetToken = {token:randomString, 
+                                valid_till:new Date(new Date().getTime() + 1000 *60 *30) //token will be valid
+                            } //setting password reset token
+   
+    return randomString
+})
 
 const User = model <IUser, UserModel> ("User", userSchema)
 export{User , IUser, IUserMethods, UserModel}

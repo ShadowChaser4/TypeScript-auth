@@ -1,8 +1,11 @@
 
 import { Redisclient } from '../db/Redis/Connect'
-import { IUser, User } from '../model/User'
+import { IUser, IUserMethods, User, UserModel } from '../model/User'
 import { compare, hash } from 'bcrypt'
 import {verify, JwtPayload} from 'jsonwebtoken'
+import { HydratedDocument } from 'mongoose'
+import { hostname } from 'os'
+import sendemail from '../utils/sendemail.utils'
 
 
 async function login_service(email:string, password:string):Promise<object>
@@ -62,6 +65,23 @@ async function change_password(oldpassword:string,password:string, auth_user:Exp
   
 }
 
+
+async function reset_password_service(user:HydratedDocument<IUser,{},IUserMethods>,host:string)
+{
+  const token:string=user.generatePasswordResetToken()
+
+  const subject :string = "Password reset"
+  const message :string = `Dear sir/madam \n
+                            \t ${user.getFullName()}, your password for account has been reset. \n 
+                            Click on below link to proceed: If this isn't by you or by your admin, please contact admin immediately. \n
+                            ${hostname}/auth/recover/id:/${user._id}/token:/${token} \n
+                            \n note: It is only valid for 30 minutes`
+  const email: string = user.email
+
+  sendemail(subject,message,email)
+
+}
+
 async function logout_service(access_token:string, refresh_token:string, user:Express.User):Promise<object |undefined>
 {
  const unseralized:string | JwtPayload = verify(refresh_token,process.env.REFRESHKEY !)
@@ -91,5 +111,6 @@ export
     login_service, 
     get_access_token, 
     change_password, 
-    logout_service
+    logout_service, 
+    reset_password_service
 }
