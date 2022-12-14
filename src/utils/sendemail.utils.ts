@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 
 
-async function sendemail(subject:string, email:string, message:string)
+async function sendemail(subject:string, message:string, email:string)
 {
     let transporter = nodemailer.createTransport({
         host: "smtp-mail.outlook.com",
@@ -11,15 +11,19 @@ async function sendemail(subject:string, email:string, message:string)
           user: process.env.EMAILUSERNAME, // generated ethereal user
           pass: process.env.EMAILPASSWORD, // generated ethereal password
         },
+        tls: {
+          rejectUnauthorized: true
+          }
       });
 
 
-      await transporter.sendMail({
-        from: process.env.EMAILUSERNAME,
-        to: email,
-        subject: subject,
-        text:message
-    });
+  const options = {
+    from: process.env.EMAILUSERNAME,
+    to: email,
+    subject: subject,
+    text:message
+}
+ await transporter.sendMail(options);
 
     return
 }

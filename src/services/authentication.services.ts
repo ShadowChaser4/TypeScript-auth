@@ -72,13 +72,21 @@ async function reset_password_service(user:HydratedDocument<IUser,{},IUserMethod
 
   const subject :string = "Password reset"
   const message :string = `Dear sir/madam \n
-                            \t ${user.getFullName()}, your password for account has been reset. \n 
+                             ${user.getFullName()}, your password for account has been reset. \n 
                             Click on below link to proceed: If this isn't by you or by your admin, please contact admin immediately. \n
-                            ${hostname}/auth/recover/id:/${user._id}/token:/${token} \n
+                            ${hostname}/auth/recover/id/${user._id}/token/${token} \n
                             \n note: It is only valid for 30 minutes`
   const email: string = user.email
+  try 
+  {
 
-  sendemail(subject,message,email)
+   await sendemail(subject,message,email)
+  }
+  catch(err)
+  {
+    console.log(err)
+    throw ({"status":500, "message":"Something wrong with email server"})
+  }
 
 }
 

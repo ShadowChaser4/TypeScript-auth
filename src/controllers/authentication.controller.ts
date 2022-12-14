@@ -75,8 +75,7 @@ async function resetpassword(req:Request, res:Response, next:NextFunction)
 
     const user = await User.findOne({email:req.body.email})
     if (! user) throw ({"status":404, "message":"User not found"})
-
-    reset_password_service(user,req.hostname)
+    await reset_password_service(user,req.hostname)
     
     res.status(200).json({"message":"Successfully reset"})
  }
