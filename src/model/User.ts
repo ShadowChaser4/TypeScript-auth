@@ -1,7 +1,7 @@
 import { Schema, model, Model, Types } from "mongoose";
 import { sign } from "jsonwebtoken";
 import crypto from 'crypto'
-
+import { Redisclient } from "../db/Redis/Connect";
 
 interface IUser 
 {
@@ -23,10 +23,11 @@ interface IUser
 
 interface IUserMethods
 {
-    getAccessToken(): string 
+    getAccessToken(): string,
     getRefreshToken(): string , 
     getFullName(): string, 
-    generatePasswordResetToken():string
+    generatePasswordResetToken():Promise<string>, 
+    verifyReset(token:string):Promise<void>
 
 }
 
@@ -137,14 +138,23 @@ userSchema.method( "getFullName", function getFullName():string{
 }
 )
 
-userSchema.method("generatePasswordResetToken",  function generatePasswordResetToken():string
+userSchema.method("generatePasswordResetToken", async function generatePasswordResetToken():Promise<string>
 {
     const randomString = crypto.randomBytes(20).toString('hex')
-    this.PasswordResetToken = {token:randomString, 
-                                valid_till:new Date(new Date().getTime() + 1000 *60 *30) //token will be valid
-                            } //setting password reset token
-   
+
+    await Redisclient.setEx(`reset_token${randomString}`,60*30,this._id.toString())
     return randomString
+})
+
+userSchema.method("verifyReset",  async function verifyReset(token:string):Promise<void>
+{
+     const  id = await Redisclient.get(`reset_token${token}`)
+
+     if (! id) throw ({"status":400, "message":"Token expired or invalid"}) // if no token found either invalid or expired
+
+     if (id != this._id.toString()) throw ({"status":401, "message":"Not authorized"}) //if token not for this user throw error
+     
+     await Redisclient.del(`reset_token${token}`)
 })
 
 const User = model <IUser, UserModel> ("User", userSchema)

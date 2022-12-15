@@ -51,8 +51,7 @@ async function change_password(oldpassword:string,password:string, auth_user:Exp
   const user = await User.findOne({_id:auth_user._id!}).select("-__v +password")
   if (! user) throw ({"status":404, "message":"No user found"})
   // if not user found throw 404 error
-  console.log(user)
-  console.log(oldpassword)
+  
   const match:Boolean =await compare(oldpassword,user.password) //compare old password with entered one
   if (! match) throw ({"status":401, "message":"Incorrect password"})
 
@@ -66,15 +65,16 @@ async function change_password(oldpassword:string,password:string, auth_user:Exp
 }
 
 
-async function reset_password_service(user:HydratedDocument<IUser,{},IUserMethods>,host:string)
+async function resettoken_service(user:HydratedDocument<IUser,{},IUserMethods>,host:string)
 {
-  const token:string=user.generatePasswordResetToken()
-
+  console.log('working here')
+  const token:string= await user.generatePasswordResetToken()
+  
   const subject :string = "Password reset"
   const message :string = `Dear sir/madam \n
                              ${user.getFullName()}, your password for account has been reset. \n 
                             Click on below link to proceed: If this isn't by you or by your admin, please contact admin immediately. \n
-                            ${hostname}/auth/recover/id/${user._id}/token/${token} \n
+                            ${'localhost:3001'/* only for dev purpose */}/auth/recover/id/${user._id}/token/${token} \n
                             \n note: It is only valid for 30 minutes`
   const email: string = user.email
   try 
@@ -90,6 +90,23 @@ async function reset_password_service(user:HydratedDocument<IUser,{},IUserMethod
 
 }
 
+
+async function resetpassword_service(id:string, token:string,password:string)
+{
+  console.log(`id ${id}, token ${token}, password ${password}`)
+  const user = await User.findOne({_id:id}).select("+password")
+  
+  if (! user) throw ({"status":404,"message":"User not found"})
+   
+   await user.verifyReset(token)
+  //verify that user is indeed allowed to reset password
+ 
+  const hash_password =await  hash(password,10)
+  user.password  = hash_password
+  await user.save()
+  return ({"message":"Password set"})
+}
+
 async function logout_service(access_token:string, refresh_token:string, user:Express.User):Promise<object |undefined>
 {
  const unseralized:string | JwtPayload = verify(refresh_token,process.env.REFRESHKEY !)
@@ -102,8 +119,7 @@ async function logout_service(access_token:string, refresh_token:string, user:Ex
 
      //blacklisting access and refresh token
     const value :string= "blacklisted"
-    console.log("access token", access_token)
-    console.log("refresh token", refresh_token)
+   
     await Redisclient.setEx(`bl_${refresh_token}`,unseralized.exp as number,value) //keep value until the token expires
     await Redisclient.setEx(`bl_${access_token}`, 60*15, value) //keep value for 15 minutes
 
@@ -120,5 +136,6 @@ export
     get_access_token, 
     change_password, 
     logout_service, 
-    reset_password_service
+    resettoken_service, 
+    resetpassword_service
 }

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 
 function errorhandler(err:Error| any,req:Request, res:Response, next:Function)
 {
+    console.log(err)
     if (err.name == 'ValidationError')
     return res.status(400).json({"message":err.message})
     

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import Joi, { ValidationResult } from "joi";
-import{change_password, get_access_token, login_service, logout_service, reset_password_service} from  '../services/authentication.services'
+import{change_password, get_access_token, login_service, logout_service, resetpassword_service, resettoken_service} from  '../services/authentication.services'
 import { User } from "../model/User";
 
 
@@ -64,10 +64,11 @@ async function changepassword(req:Request, res:Response, next:NextFunction)
     }
 }
 
-async function resetpassword(req:Request, res:Response, next:NextFunction)
+async function generateresetoken(req:Request, res:Response, next:NextFunction)
 {
  try 
  {
+    console.log(req.body)
     const {error} =Joi.object({
                                 email:Joi.string().email().required()
                             }).validate(req.body) //validating that req.body only contains email
@@ -75,7 +76,7 @@ async function resetpassword(req:Request, res:Response, next:NextFunction)
 
     const user = await User.findOne({email:req.body.email})
     if (! user) throw ({"status":404, "message":"User not found"})
-    await reset_password_service(user,req.hostname)
+    await resettoken_service(user,req.hostname)
     
     res.status(200).json({"message":"Successfully reset"})
  }
@@ -83,6 +84,25 @@ async function resetpassword(req:Request, res:Response, next:NextFunction)
  {
     next(err)
  }
+}
+
+async function resetpassword(req:Request, res:Response, next:NextFunction)
+{
+   try 
+   {
+       const {token, id} = req.params
+       const {password1,password2} = req.body
+       
+       const {error} = resetpasswordvalidation({token,id,password1,password2})
+       if (error) throw ({"status":400, "message":error.details[0].message})
+
+       return res.json(await resetpassword_service(id,token,password1))
+       
+   }
+   catch(err)
+   {
+    next(err)
+   }
 }
 
 
@@ -126,6 +146,7 @@ function refresh_token_validation(body:object)
     return schema.validate(body)
 }
 
+
 function change_password_validation(body:object):ValidationResult
 {
     const  schema = Joi.object(
@@ -139,6 +160,19 @@ function change_password_validation(body:object):ValidationResult
     .with('password','password2')
     return schema.validate(body)
 }
+
+function resetpasswordvalidation(obj:object)
+{
+    const schema = Joi.object({
+        password1:Joi.string().required().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&-+_~`"']){8,}/),
+        password2:Joi.ref("password1"),
+        token: Joi.string().required(), 
+        id:Joi.string().required()
+    }).with("password1","password2")
+
+    return schema.validate(obj)
+}
+
 
 function logoutvalidation(body:object):ValidationResult
 {
@@ -156,5 +190,6 @@ export{
     getaccesstoken, 
     changepassword, 
     logout, 
+    generateresetoken, 
     resetpassword
 }
