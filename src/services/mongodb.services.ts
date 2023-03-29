@@ -1,8 +1,6 @@
 import { HydratedDocument } from "mongoose";
 import { hash } from "bcrypt";
 import { IUser, User } from "../model/User";
-import { ILeave, Leave } from "../model/Leave";
-import { Holiday, IHolidays } from "../model/Holidays";
 import { dateformatter } from "../utils/date.formatter.utils";
 
 
@@ -30,35 +28,6 @@ async function GetUser(name?:string, offset_s?:string, designation?:string, emai
     return users
 }
 
-async function CreateLeave(body:ILeave)
-{
-    const leave = new Leave(
-        {
-            ...body
-        } 
-    )
-    
-    leave.totalleavedays()
-    return (await leave.save()).populate("for type")
-}
-
-async function CreateHoliday(body:IHolidays)
-{
-    body.starting_date = dateformatter(body.starting_date)
-    body.ending_date = dateformatter(body.ending_date)
-    //foramtting date to ensure 00:00 hours 
-    const exist = await Holiday.exists({ starting_date:{ $lte: body.starting_date }, ending_date:{$gte: body.ending_date} })
-    if (exist) throw ({"status":400, "message":"Holiday's starting and ending date clashes with existing holiday"})
-
-    const holiday = new Holiday(
-        {
-            ...body
-        }
-    )
-
-    return (await holiday.save())
-}
-
 
 async function UpdateOwnDetails(body:IUser, id:string)
 {
@@ -74,8 +43,6 @@ async function UpdateOwnDetails(body:IUser, id:string)
 
 export {
     CreateUser, 
-    CreateLeave, 
-    CreateHoliday, 
     GetUser, 
     UpdateOwnDetails
 }
